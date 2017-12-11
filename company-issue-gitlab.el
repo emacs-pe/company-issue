@@ -1,4 +1,4 @@
-;;; company-issue-glab.el --- company-mode completion for GitLab issues -*- lexical-binding: t -*-
+;;; company-issue-gitlab.el --- company-mode completion for GitLab issues -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2016 Mario Rodas <marsam@users.noreply.github.com>
 
@@ -35,24 +35,27 @@
 (require 'glab)
 (require 'company-issue)
 
-(defgroup company-issue-glab nil
+(defgroup company-issue-gitlab nil
   "company-mode completion back-end for GitLab issues."
-  :prefix "company-issue-glab"
+  :prefix "company-issue-gitlab"
   :group 'company-issue)
 
-(defcustom company-issue-glab-unpaginate t
+(defcustom company-issue-gitlab-unpaginate t
   "Whether to make an un-paginated call to fetch the GitLab issues."
   :type 'boolean
   :safe 'booleanp
-  :group 'company-issue-glab)
+  :group 'company-issue-gitlab)
+
+(defvar company-issue-gitlab-per-page 100
+  "Number of issues to list per page, by default 100 which is the max allowed.")
 
 (cl-defmethod company-issue-fetch ((_host (eql gitlab.com)) slug)
   ;; NB: URL encode slug "user/repo" to avoid to know first hand the
   ;;     project_id.
   ;;     https://docs.gitlab.com/ee/api/projects.html#get-single-project
   (let ((table (make-hash-table :test 'equal))
-        (glab-unpaginate company-issue-glab-unpaginate))
-    (dolist (issue (glab-get (format "/projects/%s/issues" (url-hexify-string slug))))
+        (glab-unpaginate company-issue-gitlab-unpaginate))
+    (dolist (issue (glab-get (format "/projects/%s/issues" (url-hexify-string slug)) `((per_page ,(number-to-string company-issue-gitlab-per-page)))))
       (let-alist issue
         (puthash (company-issue-as-string .iid)
                  (company-issue-item-new :id    .iid
@@ -62,5 +65,5 @@
                  table)))
     table))
 
-(provide 'company-issue-glab)
-;;; company-issue-glab.el ends here
+(provide 'company-issue-gitlab)
+;;; company-issue-gitlab.el ends here
