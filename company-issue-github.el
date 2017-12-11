@@ -1,4 +1,4 @@
-;;; company-issue-ghub.el --- company-mode completion for GitHub issues -*- lexical-binding: t -*-
+;;; company-issue-github.el --- company-mode completion for GitHub issues -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2016 Mario Rodas <marsam@users.noreply.github.com>
 
@@ -6,7 +6,7 @@
 ;; URL: https://github.com/emacs-pe/company-issue.el
 ;; Keywords: convenience
 ;; Version: 0.1
-;; Package-Requires: ((emacs "25.1") (let-alist "1.0.4") (ghub "1.0"))
+;; Package-Requires: ((emacs "25.1") (let-alist "1.0.4") (ghub "1.1.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -35,21 +35,23 @@
 (require 'ghub)
 (require 'company-issue)
 
-(defgroup company-issue-ghub nil
+(defgroup company-issue-github nil
   "company-mode completion back-end for GitHub issues."
-  :prefix "company-issue-ghub-"
+  :prefix "company-issue-github-"
   :group 'company-issue)
 
-(defcustom company-issue-ghub-unpaginate t
+(defcustom company-issue-github-unpaginate t
   "Whether to make an un-paginated call to fetch the GitHub issues."
   :type 'boolean
   :safe 'booleanp
-  :group 'company-issue-ghub)
+  :group 'company-issue-github)
+
+(defvar company-issue-github-per-page 100
+  "Number of issues to list per page, by default 100 which is the max allowed.")
 
 (cl-defmethod company-issue-fetch ((_host (eql github.com)) slug)
-  (let ((table (make-hash-table :test 'equal))
-        (ghub-unpaginate company-issue-ghub-unpaginate))
-    (dolist (issue (ghub-get (format "/repos/%s/issues" slug)))
+  (let ((table (make-hash-table :test 'equal)))
+    (dolist (issue (ghub-get (format "/repos/%s/issues" slug) nil :query `((per_page . ,(number-to-string company-issue-github-per-page))) :unpaginate company-issue-github-unpaginate))
       (let-alist issue
         (puthash (company-issue-as-string .number)
                  (company-issue-item-new :id    .number
@@ -59,5 +61,5 @@
                  table)))
     table))
 
-(provide 'company-issue-ghub)
-;;; company-issue-ghub.el ends here
+(provide 'company-issue-github)
+;;; company-issue-github.el ends here
